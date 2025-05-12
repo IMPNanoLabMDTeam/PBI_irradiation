@@ -1,0 +1,14 @@
+{
+    "output_dir": "plots",
+    "force_fields": {
+        "cvff": {"timestep": 1.0},
+        "CHON-2019-innerwall": {"timestep": 0.25}
+    },
+    "files": [
+        {"path": "PBI_5_75_cvff_0.out", "force_field": "cvff"},
+        {"path": "PBI_5_75_cvff_1.out", "force_field": "cvff"},
+        {"path": "PBI_5_75_cvff_2.out", "force_field": "cvff"},
+        {"path": "PBI_5_75_CHON-2019-innerwall_0.out", "force_field": "CHON-2019-innerwall"},
+        {"path": "PBI_5_75_CHON-2019-innerwall_1.out", "force_field": "CHON-2019-innerwall"}
+    ]
+} 

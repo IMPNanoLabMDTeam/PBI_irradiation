@@ -1,0 +1,141 @@
+# ------------------------------
+# 构建聚合物盒子
+# ------------------------------
+
+clear
+
+# ==============================
+# 1. 变量定义（可调参数）
+# ==============================
+
+# 力场选择
+variable ff string "cvff"                 # 选择力场类型
+
+# 是否接续
+variable restart equal false
+variable iter    equal 0
+variable ncycles equal 5   # 定义循环次数为4
+
+# 扩展参数
+variable rx equal 5
+variable ry equal 5
+variable rz equal 3
+variable n_mono equal $(v_rx*v_ry*v_rz)
+
+# 输入文件信息
+variable file_level string "../.."            # 相对层级
+variable monomer string "PBI_5"               # 单体模型
+variable monomer_file string "${file_level}/model/pristine/${monomer}_${ff}.data"  # 单体模型文件
+
+# 模拟基础设置
+units real 
+boundary p p p
+atom_style full
+
+# 输出文件信息
+variable output_model string "${monomer}_${n_mono}_${ff}"    # 输出模型名称
+variable init_file string "${output_model}_init.data"        # 初始模型文件
+variable output_file string "${output_model}.data"           # 输出文件
+variable output_dumpfile string ${output_model}_${iter}.lammpsdump # 输出轨迹文件
+variable output_logfile string ${output_model}_${iter}.out   # 输出数据记录文件
+
+# 动力学参数
+neigh_modify one 4000                         # 防止邻表溢出
+
+# ==============================
+# 2. 力场设置和模拟参数
+# ==============================
+
+# 经典力场
+bond_style harmonic
+angle_style harmonic
+dihedral_style harmonic
+improper_style cvff
+pair_style lj/cut/coul/long 10
+kspace_style pppm 1e-4
+
+# 步长
+variable ts equal 1
+
+## 系综参数
+variable damping_T  equal $(100.0*v_ts)       # 温度阻尼时间
+variable damping_P  equal $(1000.0*v_ts)       # 压强阻尼时间
+# 一阶段：NVT高温弛豫
+variable T1         equal 500.0               # 弛豫温度 (K)
+variable rstps1      equal round($(3E4/v_ts))  # 弛豫时间
+# 二阶段：NPT高温弛豫
+variable T2         equal 500.0               # 弛豫温度 (K)
+variable rstps2      equal round($(3E4/v_ts))  # 弛豫时间
+# 三阶段：NPT降温弛豫
+variable T3         equal 300.0               # 弛豫温度 (K)
+variable rstps3      equal round($(1E4/v_ts))  # 弛豫时间
+# 四阶段：NPT常温弛豫
+variable T4         equal 300.0               # 弛豫温度 (K)
+variable rstps4      equal round($(1E4/v_ts))  # 弛豫时间
+
+# ==============================
+# 3. 正式模拟
+# ==============================
+
+# 读取文件
+if "${restart}" then "read_data ${output_file}" else "read_data ${monomer_file}" & 
+"replicate ${rx} ${ry} ${rz}"
+
+# 能量最小化
+minimize  0 0 1000 100000
+
+# 初始化速度
+velocity all create ${T1} 4928459            # 设置所有原子初始速度
+
+# 保存初始构型
+write_data ${init_file} nocoeff
+
+# 设置输出参数
+timestep    ${ts}                            # 设置时间步长
+thermo 100                                   # 每200步输出一次热力学信息
+thermo_style custom step temp density press lz lx ly pe etotal  # 设置输出的热力学量
+dump   traj all custom 1000 ${output_dumpfile} id type xu yu zu vx vy vz  # 输出轨迹
+# 记录模拟全程步数、温度与密度数据到文件
+fix datalog all print 100 "$(step) $(temp) $(density)" file ${output_logfile} screen no title "# Step Temp Density"
+
+# 循环
+
+# 设置循环次数
+variable cycle loop ${ncycles}  # 创建循环变量
+
+label cycle_start  # 循环起点标签
+
+# 第一阶段
+fix    nvt1 all nvt temp ${T1} ${T1} ${damping_T}  # 控温
+run         ${rstps1}                    # 运行模拟
+unfix       nvt1                         # 解除控温
+
+# 第二阶段
+fix    npt2 all npt temp ${T2} ${T2} ${damping_T} iso 1.0 1.0 ${damping_P}  # NPT控温控压
+run         ${rstps2}                    # 运行模拟
+unfix       npt2                         # 解除控温控压
+
+# 第三阶段
+fix    npt3 all npt temp ${T2} ${T3} ${damping_T} iso 1.0 1.0 ${damping_P}  # NPT降温
+run         ${rstps3}                    # 运行模拟
+unfix       npt3                         # 解除控温控压
+
+# 第四阶段
+fix    npt4 all npt temp ${T4} ${T4} ${damping_T} iso 1.0 1.0 ${damping_P}  # NPT常温弛豫
+run         ${rstps4}                    # 运行模拟
+unfix       npt4                         # 解除控温控压
+
+variable temp_file string "${output_model}_${iter}_${cycle}.data" 
+write_data ${temp_file}
+
+# 输出当前循环信息
+print "Completed annealing cycle ${cycle} of ${ncycles}"
+
+# 检查是否为最后一个循环
+if "${cycle} < ${ncycles}" then "next cycle" "jump SELF cycle_start"
+
+# 到此处说明循环已完成
+print "All annealing cycles completed"
+
+# 输出最终结构
+write_data ${output_file}

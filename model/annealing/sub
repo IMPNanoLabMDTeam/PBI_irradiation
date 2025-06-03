@@ -1,0 +1,19 @@
+#!/bin/bash
+#SBATCH --nodes=4
+#SBATCH --tasks-per-node=48
+#SBATCH --threads-per-core=1
+#SBATCH --partition=compute ##There are one choice now, i.e., "compute" which includes node gpu01.
+#SBATCH -o slurmjob.%j.out
+#SBATCH -J PBI_test
+#SBATCH --nodelist=c[01-04]
+##“--nodelist=[nodes] i.e. --nodelist=c[01-04] to apply preffered nodes  --exclude=[nodes] i.e. --exclude=c[05-08] to avoid some particular nodes”##
+
+
+module load lmp_intel/2Aug23
+
+ulimit -s unlimited
+ulimit -l unlimited
+ulimit -m unlimited
+
+
+mpirun -genvall -bootstrap slurm lmp_intel -pk intel 0 -i  in.cvff

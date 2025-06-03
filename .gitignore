@@ -2,3 +2,5 @@
 *.png
 *.lammpsdump
 *.xyz
+
+.venv/

@@ -12,14 +12,14 @@ clear
 variable ff string "cvff"                 # 选择力场类型
 
 # 是否接续
-variable restart equal false
-variable iter    equal 0
-variable ncycles equal 5   # 定义循环次数为4
+variable restart equal true
+variable iter    equal 1
+variable ncycles equal 10   # 定义循环次数为4
 
 # 扩展参数
-variable rx equal 5
-variable ry equal 5
-variable rz equal 3
+variable rx equal 12
+variable ry equal 12
+variable rz equal 6
 variable n_mono equal $(v_rx*v_ry*v_rz)
 
 # 输入文件信息
@@ -62,16 +62,16 @@ variable damping_T  equal $(100.0*v_ts)       # 温度阻尼时间
 variable damping_P  equal $(1000.0*v_ts)       # 压强阻尼时间
 # 一阶段：NVT高温弛豫
 variable T1         equal 500.0               # 弛豫温度 (K)
-variable rstps1      equal round($(3E4/v_ts))  # 弛豫时间
+variable rstps1      equal round($(5E4/v_ts))  # 弛豫时间
 # 二阶段：NPT高温弛豫
 variable T2         equal 500.0               # 弛豫温度 (K)
-variable rstps2      equal round($(3E4/v_ts))  # 弛豫时间
+variable rstps2      equal round($(5E4/v_ts))  # 弛豫时间
 # 三阶段：NPT降温弛豫
 variable T3         equal 300.0               # 弛豫温度 (K)
-variable rstps3      equal round($(1E4/v_ts))  # 弛豫时间
+variable rstps3      equal round($(0E4/v_ts))  # 弛豫时间
 # 四阶段：NPT常温弛豫
 variable T4         equal 300.0               # 弛豫温度 (K)
-variable rstps4      equal round($(1E4/v_ts))  # 弛豫时间
+variable rstps4      equal round($(0E4/v_ts))  # 弛豫时间
 
 # ==============================
 # 3. 正式模拟
@@ -82,7 +82,7 @@ if "${restart}" then "read_data ${output_file}" else "read_data ${monomer_file}"
 "replicate ${rx} ${ry} ${rz}"
 
 # 能量最小化
-minimize  0 0 1000 100000
+minimize  0 0 10000 100000
 
 # 初始化速度
 velocity all create ${T1} 4928459            # 设置所有原子初始速度

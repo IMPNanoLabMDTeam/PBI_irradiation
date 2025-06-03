@@ -5,10 +5,17 @@
         "CHON-2019-innerwall": {"timestep": 0.25}
     },
     "files": [
-        {"path": "PBI_5_75_cvff_0.out", "force_field": "cvff"},
-        {"path": "PBI_5_75_cvff_1.out", "force_field": "cvff"},
-        {"path": "PBI_5_75_cvff_2.out", "force_field": "cvff"},
-        {"path": "PBI_5_75_CHON-2019-innerwall_0.out", "force_field": "CHON-2019-innerwall"},
-        {"path": "PBI_5_75_CHON-2019-innerwall_1.out", "force_field": "CHON-2019-innerwall"}
+        {"path": "PBI_5_864_cvff_0.out", "force_field": "cvff"},
+        {"path": "PBI_5_864_cvff_1.out", "force_field": "cvff"},
+        {"path": "PBI_5_864_cvff_2.out", "force_field": "cvff"},
+        {"path": "PBI_5_864_cvff_3.out", "force_field": "cvff"},
+        {"path": "PBI_5_864_cvff_4.out", "force_field": "cvff"},
+        {"path": "PBI_5_864_cvff_5.out", "force_field": "cvff"},
+        {"path": "PBI_5_864_cvff_6.out", "force_field": "cvff"},
+        {"path": "PBI_5_864_cvff_7.out", "force_field": "cvff"},
+        {"path": "PBI_5_864_cvff_8.out", "force_field": "cvff"},
+        {"path": "PBI_5_864_cvff_9.out", "force_field": "cvff"},
+        {"path": "PBI_5_864_cvff_10.out", "force_field": "cvff"},
+        {"path": "PBI_5_864_CHON-2019-innerwall_0.out", "force_field": "CHON-2019-innerwall"}
     ]
 } 

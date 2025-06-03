@@ -1,0 +1,94 @@
+# PI-Kapton with ReaxFF
+units real 
+boundary p p p
+atom_style full
+
+neighbor 2 bin
+neigh_modify every 5 delay 0 check yes page 100000 one 5000
+
+variable model index KAPTON10_3168_CHON2019_irradiated
+
+variable dt index 20ps
+variable dt1 index 300ps
+variable rstep index 10500
+
+read_data ${model}-${dt}.data
+#read_restart ${model}-${dt}-${dt1}.restart.${rstep}
+restart 50000 ${model}-${dt}-${dt1}.restart
+
+region cylinder1 cylinder z $((xlo+xhi)/2) $((ylo+yhi)/2)  5 EDGE EDGE units box
+region cylinder2 cylinder z $((xlo+xhi)/2) $((ylo+yhi)/2) 10 EDGE EDGE units box
+region cylinder3 cylinder z $((xlo+xhi)/2) $((ylo+yhi)/2) 15 EDGE EDGE units box
+region cylinder4 cylinder z $((xlo+xhi)/2) $((ylo+yhi)/2) 20 EDGE EDGE units box
+region cylinder5 cylinder z $((xlo+xhi)/2) $((ylo+yhi)/2) 25 EDGE EDGE units box
+region cylinder6 cylinder z $((xlo+xhi)/2) $((ylo+yhi)/2) 30 EDGE EDGE units box
+region cylinder7 cylinder z $((xlo+xhi)/2) $((ylo+yhi)/2) 35 EDGE EDGE units box
+region cylinder8 cylinder z $((xlo+xhi)/2) $((ylo+yhi)/2) 40 EDGE EDGE units box
+region cylinder9 cylinder z $((xlo+xhi)/2) $((ylo+yhi)/2) 45 EDGE EDGE units box
+region cylinder10 cylinder z $((xlo+xhi)/2) $((ylo+yhi)/2) 50 EDGE EDGE units box
+region cylinder11 cylinder z $((xlo+xhi)/2) $((ylo+yhi)/2) 55 EDGE EDGE units box
+region cylinder12 cylinder z $((xlo+xhi)/2) $((ylo+yhi)/2) 60 EDGE EDGE units box
+
+region boundary block $(xlo+10) $(xhi-10) $(ylo+10) $(yhi-10) $(zlo) $(zhi) units box side out
+
+group region1 region cylinder1
+group cylinder2 region cylinder2
+group cylinder3 region cylinder3
+group cylinder4 region cylinder4
+group cylinder5 region cylinder5
+group cylinder6 region cylinder6
+group cylinder7 region cylinder7
+group cylinder8 region cylinder8
+group cylinder9 region cylinder9
+group cylinder10 region cylinder10
+group cylinder11 region cylinder11
+group cylinder12 region cylinder12
+
+group region2 subtract cylinder2 region1
+group region3 subtract cylinder3 cylinder2
+group region4 subtract cylinder4 cylinder3
+group region5 subtract cylinder5 cylinder4
+group region6 subtract cylinder6 cylinder5
+group region7 subtract cylinder7 cylinder6
+group region8 subtract cylinder8 cylinder7
+group region9 subtract cylinder9 cylinder8
+group region10 subtract cylinder10 cylinder9
+group region11 subtract cylinder11 cylinder10
+group region12 subtract cylinder12 cylinder11
+
+group boundary dynamic all region boundary every 1000
+
+compute region1_T region1 temp
+compute region2_T region2 temp
+compute region3_T region3 temp
+compute region4_T region4 temp
+compute region5_T region5 temp
+compute region6_T region6 temp
+compute region7_T region7 temp
+compute region8_T region8 temp
+compute region9_T region9 temp
+compute region10_T region10 temp
+compute region11_T region11 temp
+compute region12_T region12 temp
+compute boundary_T boundary temp
+
+variable flux equal "0.1*(300-c_boundary_T)"
+
+thermo_style  custom step etotal temp c_region1_T c_region3_T c_region5_T c_region7_T c_region9_T c_region12_T c_boundary_T press
+thermo 200
+dump traj all custom 5000 ${model}-${dt}-${dt1}.lammpsdump id type x y z vx vy vz
+
+### boundary setting ###
+fix cooling boundary langevin 300 300 2000 12213
+fix nve all nve
+
+### early stage of irradiation ###
+#########################
+pair_style reaxff NULL mincap 1500 safezone 3  minhbonds 50 checkqeq yes
+pair_coeff	* *  ffield.reax.CHON-2019-innerwall H C N O
+fix qeq all qeq/reaxff 1 0.0 10.0 1.0e-5 reaxff
+#fix species all reaxff/species 10 10 100 ${model}_species.gz
+fix bonds all reaxff/bonds 2000 ${model}_bonds-${dt}-${dt1}.reaxff
+timestep 0.25
+run 1120000
+write_data ${model}-${dt1}.data

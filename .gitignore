@@ -2,5 +2,7 @@
 *.png
 *.lammpsdump
 *.xyz
-
+*.txt
+*.code-workspace
 .venv/
+/__pycache__
